@@ -104,6 +104,7 @@ const typeDefs = `
 
   type Author {
     name: String!
+    born: Int
     bookCount: Int!
   }
 
@@ -112,6 +113,15 @@ const typeDefs = `
     authorCount: Int!
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
+  }
+
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String!]!
+    ): Book
   }
 `
 
@@ -134,8 +144,32 @@ const resolvers = {
       },
       allAuthors: () => authors.map(author => ({
         name: author.name,
+        born: author.born || null,
         bookCount: books.filter(book => book.author === author.name).length
       }))
+    },
+    Mutation: {
+      addBook: (root, args) => {
+        const { title, author, published, genres } = args;
+        let existingAuthor = authors.find(a => a.name === author);
+  
+        // If the author doesn't exist, create a new author
+        if (!existingAuthor) {
+          existingAuthor = { name: author, born: null };
+          authors.push(existingAuthor);
+        }
+  
+        const newBook = {
+          title,
+          author,
+          published,
+          genres
+        };
+  
+        books.push(newBook);
+  
+        return newBook;
+      }
     }
   }
 

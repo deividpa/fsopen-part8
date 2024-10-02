@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
 import SetBirthYear from "./SetBirthYear";
 

@@ -1,4 +1,5 @@
 const { ApolloServer } = require('@apollo/server')
+const { GraphQLError } = require('graphql')
 const { startStandaloneServer } = require('@apollo/server/standalone')
 const mongoose = require('mongoose')
 const Author = require('./models/Author')
@@ -189,7 +190,16 @@ const resolvers = {
       
       if (!author) {
         author = new Author({ name: args.author });
-        await author.save();
+        try {
+          await author.save();
+        } catch (error) {
+          throw new GraphQLError(error.message, {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.author
+            }
+          })
+        }
       }
       
       const newBook = new Book({
@@ -199,18 +209,41 @@ const resolvers = {
         author: author._id
       });
 
-      await newBook.save();
-      return newBook.populate('author');
+      try {
+        await newBook.save();
+        return newBook.populate('author');
+      } catch (error) {
+        throw new GraphQLError(error.message, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args
+          }
+        })
+      }
     },
       editAuthor: async (root, args) => {
         const author = await Author.findOne({ name: args.name });
         if (!author) {
-          return null;
+          throw new GraphQLError('Author not found', {
+            extensions: {
+              code: 'NOT_FOUND'
+            }
+          })
         }
 
         author.born = args.setBornTo;
-        await author.save();
-        return author;
+
+        try {
+          await author.save();
+          return author;
+        } catch (error) {
+          throw new GraphQLError(error.message, {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: args.setBornTo
+            }
+          })
+        }
       },
     },
   }

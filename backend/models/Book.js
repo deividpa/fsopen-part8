@@ -7,14 +7,16 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    minlength: 5
+    minlength: [5, 'Book title must be at least 3 characters long']
+
   },
   published: {
     type: Number,
   },
   author: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Author'
+    ref: 'Author',
+    required: true
   },
   genres: [
     { type: String}

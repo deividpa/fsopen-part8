@@ -38,7 +38,9 @@ const Books = (props) => {
   return (
     <div>
       <h2>books</h2>
-      <h3>Showing books in your favorite genre: {genre}</h3>
+      <h3>
+        Showing books {genre ? `in genre: ${setGenre}` : 'from all genres'}
+      </h3>
       {books.length === 0 ? (
         <p>No books available for the selected genre.</p>
       ) : (

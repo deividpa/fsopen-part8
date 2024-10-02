@@ -152,23 +152,32 @@ const typeDefs = `
 const resolvers = {
   Query: {
     allAuthors: async () => {
-      const authors = await Author.find({})
-      const allBooks = await Book.find({}).populate('author')
-
-      return authors.map(author => ({
-        ...author.toObject(),
-        bookCount: allBooks.filter(book => book.author.name === author.name).length
-      }))
+      const authors = await Author.find({});
+      
+      // For each author, count the number of books they have written
+      return authors.map(async (author) => {
+        const bookCount = await Book.countDocuments({ author: author._id });
+        
+        return {
+          ...author.toObject(),
+          bookCount: bookCount
+        };
+      });
     },
     allBooks: async (root, args) => {
       let query = {};
+      
+      // If an author is passed, filter the books that include that author
       if (args.author) {
         const author = await Author.findOne({ name: args.author });
-        query.author = author ? author._id : null;
+        query.author = author ? author._id : null; // If the author is not found, return null
       }
+    
+      // If a genre is passed, filter the books that include that genre
       if (args.genre) {
         query.genres = { $in: [args.genre] };
       }
+    
       return Book.find(query).populate('author');
     },
     bookCount: () => Book.countDocuments(),

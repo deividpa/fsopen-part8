@@ -32,15 +32,15 @@ const ALL_BOOKS = gql`
   }
 `;
 
-const ALL_AUTHORS = gql`
-  query {
-    allAuthors {
-      name
-      born
-      bookCount
-    }
-  }
-`;
+// const ALL_AUTHORS = gql`
+//   query {
+//     allAuthors {
+//       name
+//       born
+//       bookCount
+//     }
+//   }
+// `;
 
 const NewBook = (props) => {
   const [title, setTitle] = useState('')
@@ -50,10 +50,19 @@ const NewBook = (props) => {
   const [genres, setGenres] = useState([])
 
   const [addBook] = useMutation(ADD_BOOK, {
-    refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
+    // refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
     onError: (error) => {
       console.log('Error adding book:', error.message);
-    }
+    },
+    update: (cache, { data: { addBook } }) => {
+      const { allBooks } = cache.readQuery({ query: ALL_BOOKS, variables: { genre: null } }) || { allBooks: [] };
+
+      cache.writeQuery({
+        query: ALL_BOOKS,
+        data: { allBooks: [...allBooks, addBook] },
+        variables: { genre: null },
+      });
+    },
   });
 
   if (!props.show) {

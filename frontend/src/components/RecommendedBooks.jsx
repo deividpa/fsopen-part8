@@ -29,6 +29,7 @@ const RecommendedBooks = ({ show }) => {
   const { loading: booksLoading, error: booksError, data: booksData } = useQuery(ALL_BOOKS, {
     variables: { genre },
     skip: !genre,
+    fetchPolicy: "cache-and-network",
   });
 
   useEffect(() => {

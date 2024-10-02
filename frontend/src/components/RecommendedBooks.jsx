@@ -1,6 +1,5 @@
-import { useState } from 'react'
-import { useQuery, gql } from "@apollo/client";
-
+import { useState, useEffect } from 'react';
+import { useQuery, gql } from '@apollo/client';
 
 const ALL_BOOKS = gql`
   query getAllBooks($genre: String) {
@@ -13,32 +12,45 @@ const ALL_BOOKS = gql`
       genres
     }
   }
-`
+`;
 
+const ME = gql`
+  query {
+    me {
+      favoriteGenre
+    }
+  }
+`;
 
-const Books = (props) => {
+const RecommendedBooks = ({ show }) => {
+  const [genre, setGenre] = useState(null);
 
-  const [genre, setGenre] = useState(null)
-
+  const { data: userData, loading: userLoading } = useQuery(ME);
   const { loading: booksLoading, error: booksError, data: booksData } = useQuery(ALL_BOOKS, {
     variables: { genre },
-  })
+    skip: !genre,
+  });
 
+  useEffect(() => {
+    if (userData && userData.me) {
+      setGenre(userData.me.favoriteGenre);
+    }
+  }, [userData]);
 
-  if (!props.show) {
-    return null
+  if (!show) {
+    return null;
   }
 
-  if (booksLoading) return <p>Loading...</p>;
+  if (userLoading || booksLoading) return <p>Loading...</p>;
   if (booksError) return <p>Error: {booksError.message}</p>;
 
-  const books = booksData.allBooks;
-  const allGenres = [...new Set(books.flatMap(book => book.genres))]
+  const books = booksData?.allBooks || [];
 
   return (
     <div>
-      <h2>books</h2>
-      <h3>Showing books in your favorite genre: {genre}</h3>
+      <h2>Recommended Books</h2>
+      <h3>Books in your favorite genre: {genre}</h3>
+
       {books.length === 0 ? (
         <p>No books available for the selected genre.</p>
       ) : (
@@ -46,8 +58,8 @@ const Books = (props) => {
           <tbody>
             <tr>
               <th>Title</th>
-              <th>author</th>
-              <th>published</th>
+              <th>Author</th>
+              <th>Published</th>
             </tr>
             {books.map((book) => (
               <tr key={book.title}>
@@ -59,15 +71,8 @@ const Books = (props) => {
           </tbody>
         </table>
       )}
-      <div>
-        <h3>Filter by genre</h3>
-        <button onClick={() => setGenre(null)}>All Genres</button>
-        {allGenres.map(genre => (
-          <button key={genre} onClick={() => setGenre(genre)}>{genre}</button>
-        ))}
-      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Books
+export default RecommendedBooks;

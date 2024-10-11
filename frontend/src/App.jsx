@@ -13,7 +13,7 @@ const App = () => {
   const [page, setPage] = useState("authors");
   const client = useApolloClient();
 
-  // Suscribirse a nuevos libros añadidos
+
   useSubscription(BOOK_ADDED, {
     onData: ({ data }) => {
       const addedBook = data.data.bookAdded;

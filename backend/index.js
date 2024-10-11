@@ -94,14 +94,29 @@ const typeDefs = `
 const resolvers = {
   Query: {
     allAuthors: async () => {
-      const authors = await Author.find({});
-      return authors.map(async (author) => {
-        const bookCount = await Book.countDocuments({ author: author._id });
-        return {
-          ...author.toObject(),
-          bookCount: bookCount
-        };
-      });
+      const authorsWithBookCount = await Author.aggregate([
+        {
+          $lookup: {
+            from: 'books',
+            localField: '_id',
+            foreignField: 'author',
+            as: 'books',
+          },
+        },
+        {
+          $addFields: {
+            bookCount: { $size: '$books' },
+          },
+        },
+        {
+          $project: {
+            name: 1,
+            bookCount: 1,
+          },
+        },
+      ]);
+
+      return authorsWithBookCount;
     },
     allBooks: async (root, args) => {
       let query = {};
